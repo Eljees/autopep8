@@ -5945,6 +5945,33 @@ for i in range(3):
             fixed,
             process.communicate(line.encode('utf-8'))[0].decode('utf-8'))
 
+    def test_standard_in_with_non_ascii(self):
+        line = 'print( "こんにちは" )\n'
+        fixed = 'print("こんにちは")' + os.linesep
+        process = Popen(list(AUTOPEP8_CMD_TUPLE) +
+                        ['-'],
+                        stdout=PIPE,
+                        stdin=PIPE)
+        self.assertEqual(
+            fixed,
+            process.communicate(line.encode('utf-8'))[0].decode('utf-8'))
+
+    def test_standard_in_with_non_ascii_and_ascii_console(self):
+        # the console encoding used to decide how stdin was decoded, so any
+        # non-ASCII source crashed under a legacy code page
+        line = 'print( "こんにちは" )\n'
+        env = os.environ.copy()
+        env['PYTHONIOENCODING'] = 'ascii'
+        process = Popen(list(AUTOPEP8_CMD_TUPLE) +
+                        ['-'],
+                        stdout=PIPE,
+                        stderr=PIPE,
+                        stdin=PIPE,
+                        env=env)
+        _output, _error = process.communicate(line.encode('utf-8'))
+        self.assertEqual(process.returncode, autopep8.EXIT_CODE_OK,
+                         _error.decode('utf-8', 'replace'))
+
     def test_exit_code_should_be_set_when_standard_in(self):
         line = 'print( 1 )\n'
         process = Popen(list(AUTOPEP8_CMD_TUPLE) +
