@@ -4572,12 +4572,13 @@ def read_stdin_source(encoding):
     the same way detect_encoding() does for files.
     """
     raw = sys.stdin.buffer.read()
-    for candidate in (encoding, 'utf-8', 'latin-1'):
+    for candidate in (encoding, 'utf-8'):
         try:
             return raw.decode(candidate)
         except (UnicodeDecodeError, LookupError):
             continue
-    return raw.decode(encoding, 'replace')
+    # latin-1 maps every byte, so this is the end of the chain.
+    return raw.decode('latin-1')
 
 
 def main(argv=None, apply_config=True):
